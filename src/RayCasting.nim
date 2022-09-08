@@ -1,5 +1,5 @@
 import random
-include Screen
+import Screen
 include Player
 import std/times
 import Obstacle
@@ -20,51 +20,51 @@ var new_time: float
 
 proc setup() =
   randomize()
-  world = World(screen: new_Screen(1000, 500, "RayCasting"))
+  world = World(screen: new_Screen(1280, 720, "RayCasting"))
   world.screen.window.mouseCursorGrabbed = true
   world.screen.window.mouseCursorVisible = false
   mouse_setPosition(vec2(100, 100))
   world.terrain.add(new_Obstacle(@[
-      vec2(200f, 180f), 
-      vec2(320f, 180f), 
-      vec2(320f, 320f), 
-      vec2(200f, 320f),
-      vec2(200f, 280f),
-      vec2(280f, 280f),
-      vec2(280f, 220f),
-      vec2(200f, 220f)
+      vec2(100f, 90f), 
+      vec2(160f, 90f), 
+      vec2(160f, 160f), 
+      vec2(100f, 160f),
+      vec2(100f, 140f),
+      vec2(140f, 140f),
+      vec2(140f, 110f),
+      vec2(100f, 110f)
     ], true))
   
 
   world.terrain.add(new_Obstacle(@[
-      vec2(200f, 180f), 
-      vec2(30f, 180f), 
-      vec2(320f, 20f), 
-      vec2(20f, 30f),
-      vec2(0f, 80f),
-      vec2(80f, 80f),
-      vec2(80f, 0f),
-      vec2(20f, 50f)
+      vec2(100f, 90f), 
+      vec2(15f, 90f), 
+      vec2(160f, 10f), 
+      vec2(10f, 15f),
+      vec2(0f, 40f),
+      vec2(40f, 40f),
+      vec2(40f, 0f),
+      vec2(10f, 25f)
     ], true))
   
   var vertices: seq[Vector2f] = @[]
   var vertc = 8
-  var radius = vec2(100f, 100f)
-  var offset = vec2(200f, 500f)
+  var radius = vec2(50f, 50f)
+  var offset = vec2(100f, 250f)
   for i in 0..vertc - 1:
     vertices.add(vec2(cos((360f / float(vertc) * float(i)).degToRad) * radius.x + offset.x, sin((360f / float(vertc) * float(i)).degToRad) * radius.y + offset.y))
   world.terrain.add(new_Obstacle(vertices, false))
   vertices = @[]
   vertc = 200
-  radius = vec2(100f, 50f)
-  offset = vec2(0f, 300f)
+  radius = vec2(50f, 25f)
+  offset = vec2(0f, 150f)
   for i in 0..vertc - 1:
     vertices.add(vec2(cos((360f / float(vertc) * float(i)).degToRad) * radius.x + offset.x, sin((360f / float(vertc) * float(i)).degToRad) * radius.y + offset.y))
   world.terrain.add(new_Obstacle(vertices, true))
-  player = new_Player(radius = 6, speed = 150, fov = 70)
+  player = new_Player(world.screen, radius = 6, speed = 150, fov = 70)
 
 
-
+proc loop();
 
 proc handle_events() =
   var event: Event
@@ -78,6 +78,10 @@ proc handle_events() =
           of KeyCode.Escape:
             world.screen.window.close()
             EXIT = true
+          of KeyCode.Space:
+            loop()
+            discard world.screen.window.capture().saveToFile("screenshot.png")
+            echo "Screenshot taken"
           else: discard
       of EventType.MouseWheelScrolled:
         player.fov += 300 * event.mouseWheelScroll.delta * delta
@@ -108,7 +112,7 @@ proc draw_3d(ray: Ray, i: float) =
   rect.destroy()
 
 proc loop() =
-  world.screen.window.clear(color(0, 0, 0, 0))
+  world.screen.window.clear(color(0, 0, 0, 255))
   handle_events()
 
   new_time = cpuTime()

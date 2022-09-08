@@ -2,26 +2,29 @@ import csfml
 import Ray
 import math
 import Obstacle
+import Screen
 
 type
   Player = ref object
     position: Vector2f
     radius: float
     shape: CircleShape
-    rays: array[2000, Ray]
+    rays: array[5000, Ray]
     speed: float
     fov: float
     angle: float
     lastMouseMove: Vector2i
+    screen: Screen
 
-proc new_Player(radius: float = 5, speed: float = 100, fov: float = 70): Player =
-  var self = Player(position: vec2(250, 250), radius: radius)
+proc new_Player(screen: Screen, radius: float = 5, speed: float = 100, fov: float = 70): Player =
+  var self = Player(position: vec2(screen.width / 4, screen.height / 2), radius: radius)
   self.speed = speed
   self.fov = fov
   self.shape = newCircleShape()
   self.shape.fillColor = color(255, 255, 255, 255)
   self.shape.radius = self.radius
   self.shape.position = self.position - vec2(self.radius / 2, self.radius / 2)
+  self.screen = screen
   for i in 0..self.rays.len - 1:
     self.rays[i] = new_Ray(float(i * 360 / self.rays.len).degToRad, 10000)
   return self
@@ -46,17 +49,21 @@ proc update(self: Player, delta: float, obstacles: seq[Obstacle]) =
   for obs in obstacles:
     obs.move(-vel)
 
-  if mouse_getPosition().x - self.lastMouseMove.x < 0:
-    self.angle += float(abs(mouse_getPosition().x - self.lastMouseMove.x) * 10) * delta
+
+  var mouseDelta = (mouse_getPosition().x - self.screen.window.position.x) - self.lastMouseMove.x
+  var origin = vec2(self.screen.width div 2 + self.screen.window.position.x, self.screen.height div 2 + self.screen.window.position.y)
+  echo mouseDelta
+  if mouseDelta < 0:
+    self.angle += float(abs(mouseDelta) * 10) * delta
     if self.angle <= 0:
       self.angle += 360
-    mouse_setPosition(vec2(100, 100))
-  if mouse_getPosition().x - self.lastMouseMove.x > 0:
-    self.angle -= float(abs(mouse_getPosition().x - self.lastMouseMove.x) * 10) * delta
+    mouse_setPosition(origin)
+  if mouseDelta > 0:
+    self.angle -= float(abs(mouseDelta) * 10) * delta
     if self.angle >= 360:
       self.angle -= 360
-    mouse_setPosition(vec2(100, 100))
-  self.lastMouseMove = mouse_getPosition()
+    mouse_setPosition(origin)
+  self.lastMouseMove = mouse_getPosition() - self.screen.window.position
   
 
 proc isInAngleRange(angle: float, a: float, b: float): bool =
